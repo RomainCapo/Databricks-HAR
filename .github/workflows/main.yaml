@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Update repos
+        id: updateRepos
         uses: fjogeleit/http-request-action@master
         with:
           url: 'https://mlab-masterthesis.cloud.databricks.com/api/2.0/repos/3478964653040574'
@@ -19,3 +20,5 @@ jobs:
           bearerToken: ${{ secrets.DATABRICKS_TOKEN }}
           contentType: 'application/json'
           data: '{"branch":"main"}'
+      - name: Show Response
+        run: echo ${{ steps.updateRepos.outputs.response }}
