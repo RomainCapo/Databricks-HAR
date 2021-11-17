@@ -1,0 +1,21 @@
+# build.yml
+on:
+  pull_request:
+    branches:        
+    - main            
+
+name: Update main folder in Databricks
+
+jobs:
+  update-staging:
+    name: Update main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update repos
+        uses: fjogeleit/http-request-action@master
+        with:
+          url: 'https://mlab-masterthesis.cloud.databricks.com/api/2.0/repos/3478964653040574'
+          method: 'PATCH'
+          bearerToken: ${{ secrets.DATABRICKS_TOKEN }}
+          contentType: 'application/json'
+          data: '{"branch":"main"}'
