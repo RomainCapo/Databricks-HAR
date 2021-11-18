@@ -20,5 +20,17 @@ jobs:
           bearerToken: ${{ secrets.DATABRICKS_TOKEN }}
           contentType: 'application/json'
           data: '{"branch":"main"}'
-      - name: Show Response
+      - name: Show update repos response
         run: echo ${{ steps.updateRepos.outputs.response }}
+      - name: Run pipeline
+        id: runPipeline
+        uses: fjogeleit/http-request-action@master
+        with:
+          url: 'https://mlab-masterthesis.cloud.databricks.com/api/2.1/jobs/run-now'
+          method: 'POST'
+          bearerToken: ${{ secrets.DATABRICKS_TOKEN }}
+          contentType: 'application/json'
+          data: '{"job_id":1464}'
+      - name: Show run pipeline response
+        run: echo ${{ steps.runPipeline.outputs.response }}
+
