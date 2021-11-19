@@ -15,7 +15,7 @@ jobs:
         id: updateRepos
         uses: fjogeleit/http-request-action@master
         with:
-          url: 'https://mlab-masterthesis.cloud.databricks.com/api/2.0/repos/3478964653040535'
+          url: 'https://mlab-masterthesis.cloud.databricks.com/api/2.0/repos/3478964653040613'
           method: 'PATCH'
           bearerToken: ${{ secrets.DATABRICKS_TOKEN }}
           contentType: 'application/json'
