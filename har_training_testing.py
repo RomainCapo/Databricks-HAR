@@ -184,6 +184,12 @@ x_data_test, y_data_test = partition_data(hyperparameters["test_subjects"], subj
 # COMMAND ----------
 
 def promotes_new_model(stage, model_name):
+    """Archive all model wih the given stage and promotes the last one.
+
+    Args:
+        stage (string): Model stage
+        model_name (string): Model name
+    """
     mlflowclient = client.MlflowClient()
     max_version = 0
 
