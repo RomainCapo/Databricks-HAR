@@ -19,7 +19,7 @@ jobs:
           method: 'PATCH'
           bearerToken: ${{ secrets.DATABRICKS_TOKEN }}
           contentType: 'application/json'
-          data: '{"branch":"main"}'
+          data: '{"branch":"staging"}'
       - name: Show update repos response
         run: echo ${{ steps.updateRepos.outputs.response }}
       - name: Run pipeline
