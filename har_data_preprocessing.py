@@ -81,8 +81,8 @@ DELTA_GOLD_PATH = "/tmp/delta/gold"
 window = int(dbutils.widgets.get("window"))
 overlap = int(dbutils.widgets.get("overlap"))
 train_subject = tuple(map(int, dbutils.widgets.get("train_subjects")[0].split(" ")))
-validation_subject = tuple(map(int, dbutils.widgets.get("validation_subject")[0].split(" ")))
-test_subject = tuple(map(int, dbutils.widgets.get("test_subject")[0].split(" ")))
+validation_subject = tuple(map(int, dbutils.widgets.get("validation_subjects")[0].split(" ")))
+test_subject = tuple(map(int, dbutils.widgets.get("test_subjects")[0].split(" ")))
 
 x_data, y_data, subj_inputs = create_dataset("/dbfs/mnt/s3-mounted-input/PPG_ACC_dataset", window, overlap)
 clean_data(x_data)
