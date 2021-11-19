@@ -87,7 +87,7 @@ test_subject = tuple(map(int, dbutils.widgets.get("test_subjects")[0].split(" ")
 x_data, y_data, subj_inputs = create_dataset("/dbfs/mnt/s3-mounted-input/PPG_ACC_dataset", window, overlap)
 clean_data(x_data)
 x_data_norm = normalize(x_data)
-x_data, y_data, subj_inputs = oversampling(x_data, y_data, subj_inputs, len(train_subject + validation_subject))
+x_data_norm, y_data, subj_inputs = oversampling(x_data_norm, y_data, subj_inputs, len(train_subject + validation_subject))
 
 # COMMAND ----------
 
@@ -130,3 +130,7 @@ df_spark_subjects_index_silver = spark.createDataFrame(pd.DataFrame(subj_inputs,
 df_spark_subjects_index_silver.write.format("delta").mode("overwrite").save(path)
 
 spark.sql("CREATE TABLE IF NOT EXISTS " + table_name + " USING DELTA LOCATION '" + path + "'")
+
+# COMMAND ----------
+
+
