@@ -1,0 +1,35 @@
+# build.yml
+on:
+  pull_request:
+    branches:        
+    - staging            
+
+name: Update main folder in Databricks
+
+jobs:
+  update-staging:
+    name: Update main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update repos
+        id: updateRepos
+        uses: fjogeleit/http-request-action@master
+        with:
+          url: 'https://mlab-masterthesis.cloud.databricks.com/api/2.0/repos/3478964653040535'
+          method: 'PATCH'
+          bearerToken: ${{ secrets.DATABRICKS_TOKEN }}
+          contentType: 'application/json'
+          data: '{"branch":"main"}'
+      - name: Show update repos response
+        run: echo ${{ steps.updateRepos.outputs.response }}
+      - name: Run pipeline
+        id: runPipeline
+        uses: fjogeleit/http-request-action@master
+        with:
+          url: 'https://mlab-masterthesis.cloud.databricks.com/api/2.1/jobs/run-now'
+          method: 'POST'
+          bearerToken: ${{ secrets.DATABRICKS_TOKEN }}
+          contentType: 'application/json'
+          data: '{"job_id":1394}'
+      - name: Show run pipeline response
+        run: echo ${{ steps.runPipeline.outputs.response }}
