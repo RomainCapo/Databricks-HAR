@@ -175,9 +175,9 @@ environment = dbutils.widgets.get("environment")
 hyperparameters = {
     "epochs":int(dbutils.widgets.get("epochs")),
     "learning_rate":float(dbutils.widgets.get("learning_rate")),
-    "train_subjects":tuple(map(int, dbutils.widgets.get("train_subjects")[0].split(" "))),
-    "validation_subjects": tuple(map(int, dbutils.widgets.get("validation_subjects")[0].split(" "))),
-    "test_subjects": tuple(map(int, dbutils.widgets.get("test_subjects")[0].split(" "))),
+    "train_subjects":tuple(map(int, dbutils.widgets.get("train_subjects").split("-"))),
+    "validation_subjects": tuple(map(int, dbutils.widgets.get("validation_subjects").split("-"))),
+    "test_subjects": tuple(map(int, dbutils.widgets.get("test_subjects").split("-"))),
     "num_cell_dense1":int(dbutils.widgets.get("num_cell_dense1")),
     "num_cell_lstm1":int(dbutils.widgets.get("num_cell_lstm1")),
     "num_cell_lstm2":int(dbutils.widgets.get("num_cell_lstm2")),
@@ -191,6 +191,13 @@ hyperparameters = {
 
 # MAGIC %md
 # MAGIC ## Split dataset
+# MAGIC If new subjects have been added and the topic indexes have not been modified in the notebook settings the new topics are automatically added as training subjects.
+
+# COMMAND ----------
+
+num_subjects = len(hyperparameters["train_subjects"] + hyperparameters["validation_subjects"] + hyperparameters["test_subjects"])
+if num_subjects < len(subj_inputs):
+    hyperparameters["train_subjects"] = hyperparameters["train_subjects"] + tuple(range(num_subjects, len(subj_inputs)))
 
 # COMMAND ----------
 
