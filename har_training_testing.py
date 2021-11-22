@@ -19,6 +19,7 @@ dbutils.widgets.text("window","1200","window")
 dbutils.widgets.text("overlap","600","overlap")
 dbutils.widgets.dropdown("environment", "Development", ["Development","Staging","Production"])
 dbutils.widgets.text("accuracy_thresold","0.6","accuracy_thresold")
+dbutils.widgets.text("data_version","latest","data_version")
 
 # COMMAND ----------
 
@@ -62,16 +63,37 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Get data version
+
+# COMMAND ----------
+
+input_data_version = dbutils.widgets.get("data_version")
+table_data_version = -1
+
+# COMMAND ----------
+
+if input_data_version == "latest":
+    table_data_version = str(spark.sql("DESCRIBE HISTORY PPG_ACC_dataset").select("version").first().version)
+else :
+    try:
+        spark.sql("DESCRIBE HISTORY PPG_ACC_dataset").select("version").filter(f"version == {0}").show()
+        table_data_version = input_data_version
+    except Exception as e:
+        print(e)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Load data from delta table
 
 # COMMAND ----------
 
-df_spark = spark.read.format("delta").load("/tmp/delta/silver/PPG_ACC_dataset")
+df_spark = spark.read.format("delta").option("versionAsOf", table_data_version).load("/tmp/delta/ppg_acc_dataset/PPG_ACC_dataset")
 df_pandas = df_spark.toPandas()
 
 # COMMAND ----------
 
-df_spark_subjects = spark.read.format("delta").load("/tmp/delta/silver/subjects_index")
+df_spark_subjects = spark.read.format("delta").option("versionAsOf", table_data_version).load("/tmp/delta/ppg_acc_dataset/subjects_index")
 df_pandas_subjects = df_spark_subjects.toPandas()
 subj_inputs = df_pandas_subjects['subjects_index'].tolist()
 
@@ -153,9 +175,9 @@ environment = dbutils.widgets.get("environment")
 hyperparameters = {
     "epochs":int(dbutils.widgets.get("epochs")),
     "learning_rate":float(dbutils.widgets.get("learning_rate")),
-    "train_subjects":tuple(map(int, dbutils.widgets.get("train_subjects")[0].split(" "))),
-    "validation_subjects": tuple(map(int, dbutils.widgets.get("validation_subjects")[0].split(" "))),
-    "test_subjects": tuple(map(int, dbutils.widgets.get("test_subjects")[0].split(" "))),
+    "train_subjects":tuple(map(int, dbutils.widgets.get("train_subjects").split("-"))),
+    "validation_subjects": tuple(map(int, dbutils.widgets.get("validation_subjects").split("-"))),
+    "test_subjects": tuple(map(int, dbutils.widgets.get("test_subjects").split("-"))),
     "num_cell_dense1":int(dbutils.widgets.get("num_cell_dense1")),
     "num_cell_lstm1":int(dbutils.widgets.get("num_cell_lstm1")),
     "num_cell_lstm2":int(dbutils.widgets.get("num_cell_lstm2")),
@@ -169,6 +191,13 @@ hyperparameters = {
 
 # MAGIC %md
 # MAGIC ## Split dataset
+# MAGIC If new subjects have been added and the topic indexes have not been modified in the notebook settings the new topics are automatically added as training subjects.
+
+# COMMAND ----------
+
+num_subjects = len(hyperparameters["train_subjects"] + hyperparameters["validation_subjects"] + hyperparameters["test_subjects"])
+if num_subjects < len(subj_inputs):
+    hyperparameters["train_subjects"] = hyperparameters["train_subjects"] + tuple(range(num_subjects, len(subj_inputs)))
 
 # COMMAND ----------
 
@@ -228,6 +257,7 @@ with mlflow.start_run(run_name='lstm_har') as run:
     mlflow.log_param("overlap", hyperparameters["overlap"])
     mlflow.log_param("environment", environment)
     mlflow.log_param("accuracy_thresold", accuracy_thresold)
+    mlflow.log_param("data_version", table_data_version)
 
     model = create_model(hyperparameters, num_classes, num_features)
     

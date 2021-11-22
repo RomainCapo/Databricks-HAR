@@ -5,7 +5,7 @@
 
 # COMMAND ----------
 
-dbutils.widgets.text("window","1200","window")
+dbutils.widgets.text("window","1200","window") 
 dbutils.widgets.text("overlap","600","overlap")
 dbutils.widgets.text("train_subjects","0-1-2-3","train_subjects")
 dbutils.widgets.text("validation_subjects","4","validation_subjects")
@@ -40,8 +40,7 @@ from sklearn.preprocessing import StandardScaler
 
 # COMMAND ----------
 
-DELTA_SILVER_PATH = "/tmp/delta/silver"
-DELTA_GOLD_PATH = "/tmp/delta/gold"
+DELTA_LAKE_PATH= "/tmp/delta/dataset"
 
 # COMMAND ----------
 
@@ -51,7 +50,7 @@ DELTA_GOLD_PATH = "/tmp/delta/gold"
 
 # COMMAND ----------
 
-# MAGIC %sql
+# MAGIC %md
 # MAGIC CREATE TABLE IF NOT EXISTS bronze_raw_data (path STRING, modificationTime TIMESTAMP, length LONG)
 
 # COMMAND ----------
@@ -61,7 +60,7 @@ DELTA_GOLD_PATH = "/tmp/delta/gold"
 
 # COMMAND ----------
 
-# MAGIC %sql
+# MAGIC %md
 # MAGIC COPY INTO bronze_raw_data
 # MAGIC FROM (
 # MAGIC   SELECT path, modificationTime, length
@@ -91,6 +90,11 @@ x_data_norm, y_data, subj_inputs = oversampling(x_data_norm, y_data, subj_inputs
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### Convert 3D dataset to 2D by storing vector
+
+# COMMAND ----------
+
 table = []
 for x0 in range(x_data_norm.shape[0]):
     table.append([])
@@ -104,14 +108,14 @@ for x0 in range(x_data_norm.shape[0]):
 
 # COMMAND ----------
 
-table_name = "default.silver_ppg_acc_dataset"
+table_name = "default.ppg_acc_dataset"
 
-path = DELTA_SILVER_PATH + "/PPG_ACC_dataset"
+path = DELTA_LAKE_PATH + "/PPG_ACC_dataset"
 
-df_pandas_silver = pd.DataFrame(table)
-df_pandas_silver["target"] = y_data
-df_spark_silver = spark.createDataFrame(df_pandas_silver)
-df_spark_silver.write.format("delta").mode("overwrite").save(path)
+df_pandas_ppg_acc = pd.DataFrame(table)
+df_pandas_ppg_acc["target"] = y_data
+df_spark_ppg_acc = spark.createDataFrame(df_pandas_ppg_acc)
+df_spark_ppg_acc.write.format("delta").mode("overwrite").save(path)
 
 spark.sql("CREATE TABLE IF NOT EXISTS " + table_name + " USING DELTA LOCATION '" + path + "'")
 
@@ -122,12 +126,12 @@ spark.sql("CREATE TABLE IF NOT EXISTS " + table_name + " USING DELTA LOCATION '"
 
 # COMMAND ----------
 
-table_name = "default.silver_ppg_acc_subjects_index"
+table_name = "default.ppg_acc_subjects_index"
 
-path = DELTA_SILVER_PATH + "/subjects_index"
+path = DELTA_LAKE_PATH + "/subjects_index"
 
-df_spark_subjects_index_silver = spark.createDataFrame(pd.DataFrame(subj_inputs, columns=["subjects_index"]))
-df_spark_subjects_index_silver.write.format("delta").mode("overwrite").save(path)
+df_spark_subjects_index = spark.createDataFrame(pd.DataFrame(subj_inputs, columns=["subjects_index"]))
+df_spark_subjects_index.write.format("delta").mode("overwrite").save(path)
 
 spark.sql("CREATE TABLE IF NOT EXISTS " + table_name + " USING DELTA LOCATION '" + path + "'")
 

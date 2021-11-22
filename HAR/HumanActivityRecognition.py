@@ -152,3 +152,34 @@ def oversampling(x_data, y_data, subj_inputs, num_subjects):
     subj_inputs_over.extend(subj_inputs[num_subjects:])
 
     return x_data_over, y_data_over, subj_inputs_over
+
+# COMMAND ----------
+
+def partition_data(subjects, subj_inputs, x_data, y_data):
+    """Retrieval of subject data based on subject indices passed in parameters.
+
+    Args:
+        subjects (list): List of subjects index.
+        subj_inputs (List): List of index subject separation in input data.
+        x_data (np.array): Input data
+        y_data (np.array): Output data
+
+    Returns:
+        tuple: Partionned input data, Partionned output data
+    """
+        
+    # subjects = tuple (0-based)
+    x_part = None
+    y_part = None
+    for subj in subjects:
+        skip = sum(subj_inputs[:subj])
+        num = subj_inputs[subj]
+        xx = x_data[skip : skip + num]
+        yy = y_data[skip : skip + num]
+        if x_part is None:
+            x_part = xx.copy()
+            y_part = yy.copy()
+        else:
+            x_part = np.vstack((x_part, xx))  # vstack creates a copy of the data
+            y_part = np.vstack((y_part, yy))
+    return x_part, y_part
