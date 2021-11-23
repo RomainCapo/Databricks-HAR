@@ -20,7 +20,7 @@ jobs:
           bearerToken: ${{ secrets.DATABRICKS_TOKEN }}
           contentType: 'application/json'
           data: '{"branch":"main"}'
-      - name: Show Response
+      - name: Show update repos response
         run: echo ${{ steps.updateRepos.outputs.response }}
       - name: Run pipeline
         id: runPipeline
