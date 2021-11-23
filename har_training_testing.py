@@ -10,7 +10,7 @@ dbutils.widgets.text("learning_rate","0.01","learning_rate")
 dbutils.widgets.text("train_subjects","0-1-2-3","train_subjects")
 dbutils.widgets.text("validation_subjects","4","validation_subjects")
 dbutils.widgets.text("test_subjects","5-6","test_subjects")
-dbutils.widgets.text("num_cell_dense1","32","num_cell_dense1")
+dbutils.widgets.text("num_cell_dense1","32","num_cell_dense1") 
 dbutils.widgets.text("num_cell_lstm1","32","num_cell_lstm1")
 dbutils.widgets.text("num_cell_lstm2","32","num_cell_lstm2")
 dbutils.widgets.text("num_cell_lstm3","32","num_cell_lstm3")
@@ -18,7 +18,8 @@ dbutils.widgets.text("dropout_rate","0.01","dropout_rate")
 dbutils.widgets.text("window","1200","window")
 dbutils.widgets.text("overlap","600","overlap")
 dbutils.widgets.dropdown("environment", "Development", ["Development","Staging","Production"])
-dbutils.widgets.text("accuracy_thresold","0.6","accuracy_thresold")
+dbutils.widgets.text("accuracy_thresold","0.3","accuracy_thresold")
+dbutils.widgets.text("data_version","latest","data_version")
 
 # COMMAND ----------
 
@@ -62,16 +63,37 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Get data version
+
+# COMMAND ----------
+
+input_data_version = dbutils.widgets.get("data_version")
+table_data_version = -1
+
+# COMMAND ----------
+
+if input_data_version == "latest":
+    table_data_version = str(spark.sql("DESCRIBE HISTORY PPG_ACC_dataset").select("version").first().version)
+else :
+    try:
+        spark.sql("DESCRIBE HISTORY PPG_ACC_dataset").select("version").filter(f"version == {0}").show()
+        table_data_version = input_data_version
+    except Exception as e:
+        print(e)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Load data from delta table
 
 # COMMAND ----------
 
-df_spark = spark.read.format("delta").load("/tmp/delta/silver/PPG_ACC_dataset")
+df_spark = spark.read.format("delta").option("versionAsOf", table_data_version).load("/tmp/delta/dataset/PPG_ACC_dataset")
 df_pandas = df_spark.toPandas()
 
 # COMMAND ----------
 
-df_spark_subjects = spark.read.format("delta").load("/tmp/delta/silver/subjects_index")
+df_spark_subjects = spark.read.format("delta").option("versionAsOf", table_data_version).load("/tmp/delta/dataset/subjects_index")
 df_pandas_subjects = df_spark_subjects.toPandas()
 subj_inputs = df_pandas_subjects['subjects_index'].tolist()
 
@@ -153,9 +175,9 @@ environment = dbutils.widgets.get("environment")
 hyperparameters = {
     "epochs":int(dbutils.widgets.get("epochs")),
     "learning_rate":float(dbutils.widgets.get("learning_rate")),
-    "train_subjects":tuple(map(int, dbutils.widgets.get("train_subjects")[0].split(" "))),
-    "validation_subjects": tuple(map(int, dbutils.widgets.get("validation_subjects")[0].split(" "))),
-    "test_subjects": tuple(map(int, dbutils.widgets.get("test_subjects")[0].split(" "))),
+    "train_subjects":tuple(map(int, dbutils.widgets.get("train_subjects").split("-"))),
+    "validation_subjects": tuple(map(int, dbutils.widgets.get("validation_subjects").split("-"))),
+    "test_subjects": tuple(map(int, dbutils.widgets.get("test_subjects").split("-"))),
     "num_cell_dense1":int(dbutils.widgets.get("num_cell_dense1")),
     "num_cell_lstm1":int(dbutils.widgets.get("num_cell_lstm1")),
     "num_cell_lstm2":int(dbutils.widgets.get("num_cell_lstm2")),
@@ -169,6 +191,13 @@ hyperparameters = {
 
 # MAGIC %md
 # MAGIC ## Split dataset
+# MAGIC If new subjects have been added and the topic indexes have not been modified in the notebook settings the new topics are automatically added as training subjects.
+
+# COMMAND ----------
+
+num_subjects = len(hyperparameters["train_subjects"] + hyperparameters["validation_subjects"] + hyperparameters["test_subjects"])
+if num_subjects < len(subj_inputs):
+    hyperparameters["train_subjects"] = hyperparameters["train_subjects"] + tuple(range(num_subjects, len(subj_inputs)))
 
 # COMMAND ----------
 
@@ -184,6 +213,12 @@ x_data_test, y_data_test = partition_data(hyperparameters["test_subjects"], subj
 # COMMAND ----------
 
 def promotes_new_model(stage, model_name):
+    """Archive all model wih the given stage and promotes the last one.
+
+    Args:
+        stage (string): Model stage
+        model_name (string): Model name
+    """
     mlflowclient = client.MlflowClient()
     max_version = 0
 
@@ -205,7 +240,7 @@ def promotes_new_model(stage, model_name):
 # COMMAND ----------
 
 model_name = "rnn-model"
-mlflow.set_experiment("/Repos/Production/Databricks-HAR/har_training")
+mlflow.set_experiment("/Repos/Production/Databricks-HAR/har_training_testing")
 
 with mlflow.start_run(run_name='lstm_har') as run:
     mlflow.log_param("epochs", hyperparameters["epochs"])
@@ -222,6 +257,7 @@ with mlflow.start_run(run_name='lstm_har') as run:
     mlflow.log_param("overlap", hyperparameters["overlap"])
     mlflow.log_param("environment", environment)
     mlflow.log_param("accuracy_thresold", accuracy_thresold)
+    mlflow.log_param("data_version", table_data_version)
 
     model = create_model(hyperparameters, num_classes, num_features)
     
