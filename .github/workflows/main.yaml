@@ -33,4 +33,3 @@ jobs:
           data: '{"job_id":1574}'
       - name: Show run pipeline response
         run: echo ${{ steps.runPipeline.outputs.response }}
-
