@@ -18,7 +18,7 @@ dbutils.widgets.text("dropout_rate","0.01","dropout_rate")
 dbutils.widgets.text("window","1200","window")
 dbutils.widgets.text("overlap","600","overlap")
 dbutils.widgets.dropdown("environment", "Development", ["Development","Staging","Production"])
-dbutils.widgets.text("accuracy_thresold","0.6","accuracy_thresold")
+dbutils.widgets.text("accuracy_thresold","0.3","accuracy_thresold")
 dbutils.widgets.text("data_version","latest","data_version")
 
 # COMMAND ----------
