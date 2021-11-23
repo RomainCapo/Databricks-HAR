@@ -19,14 +19,14 @@ class TestModel(unittest.TestCase):
         self.assertEqual(y_data_shape, excepted_shape, "Should be (1,)")
         
     def test_model_input(self):
-        model_input_shape = tuple(m.layers[0].input.get_shape().as_list())[1:]
+        model_input_shape = tuple(model.layers[0].input.get_shape().as_list())[1:]
         excepted_shape = (window,num_features)
         self.assertEqual(model_input_shape, excepted_shape, f"Should be ({window}, {num_features})")
         
     def test_model_output(self):
-        model_output_shape = tuple(m.layers[-1].input.get_shape().as_list())[1:]
+        model_output_shape = tuple(model.layers[-1].output.get_shape().as_list())[1:]
         excepted_shape = (num_classes,)
-        self.assertEqual(model_output_shape, excepted_shape, "Should be (1,)")
+        self.assertEqual(model_output_shape, excepted_shape, "Should be (3,)")
         
     def test_prediction_shape(self):
         num_samples = 3
