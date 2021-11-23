@@ -88,12 +88,12 @@ else :
 
 # COMMAND ----------
 
-df_spark = spark.read.format("delta").option("versionAsOf", table_data_version).load("/tmp/delta/ppg_acc_dataset/PPG_ACC_dataset")
+df_spark = spark.read.format("delta").option("versionAsOf", table_data_version).load("/tmp/delta/dataset/PPG_ACC_dataset")
 df_pandas = df_spark.toPandas()
 
 # COMMAND ----------
 
-df_spark_subjects = spark.read.format("delta").option("versionAsOf", table_data_version).load("/tmp/delta/ppg_acc_dataset/subjects_index")
+df_spark_subjects = spark.read.format("delta").option("versionAsOf", table_data_version).load("/tmp/delta/dataset/subjects_index")
 df_pandas_subjects = df_spark_subjects.toPandas()
 subj_inputs = df_pandas_subjects['subjects_index'].tolist()
 
@@ -240,7 +240,7 @@ def promotes_new_model(stage, model_name):
 # COMMAND ----------
 
 model_name = "rnn-model"
-mlflow.set_experiment("/Repos/Production/Databricks-HAR/har_training")
+mlflow.set_experiment("/Repos/Production/Databricks-HAR/har_training_testing")
 
 with mlflow.start_run(run_name='lstm_har') as run:
     mlflow.log_param("epochs", hyperparameters["epochs"])
