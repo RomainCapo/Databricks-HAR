@@ -20,6 +20,7 @@ dbutils.widgets.text("overlap","600","overlap")
 dbutils.widgets.dropdown("environment", "Development", ["Development","Staging","Production"])
 dbutils.widgets.text("accuracy_thresold","0.3","accuracy_thresold")
 dbutils.widgets.text("data_version","latest","data_version")
+dbutils.widgets.text("classes","rest-step-squat","classes")
 
 # COMMAND ----------
 
@@ -184,7 +185,8 @@ hyperparameters = {
     "num_cell_lstm3":int(dbutils.widgets.get("num_cell_lstm3")),
     "dropout_rate":float(dbutils.widgets.get("dropout_rate")),
     "window":window,
-    "overlap":int(dbutils.widgets.get("overlap"))
+    "overlap":int(dbutils.widgets.get("overlap")),
+    "classes":dbutils.widgets.get("classes").split("-")
 }
 
 # COMMAND ----------
@@ -258,6 +260,8 @@ with mlflow.start_run(run_name='lstm_har') as run:
     mlflow.log_param("environment", environment)
     mlflow.log_param("accuracy_thresold", accuracy_thresold)
     mlflow.log_param("data_version", table_data_version)
+    mlflow.log_param("classes", hyperparameters["classes"])
+
 
     model = create_model(hyperparameters, num_classes, num_features)
     
@@ -287,6 +291,11 @@ with mlflow.start_run(run_name='lstm_har') as run:
 
         mlflow.keras.log_model(model, model_name, signature=signature, input_example=input_example, registered_model_name=model_name)
         
-        promotes_new_model(environment, model_name)
+        if environment != "Development":
+            promotes_new_model(environment, model_name)
     else :
         print("The model is not registered because the unit tests failed or the model did not reach the requested accuracy.")
+
+# COMMAND ----------
+
+
