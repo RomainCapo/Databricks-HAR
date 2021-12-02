@@ -10,6 +10,7 @@ dbutils.widgets.text("overlap","600","overlap")
 dbutils.widgets.text("train_subjects","0-1-2-3","train_subjects")
 dbutils.widgets.text("validation_subjects","4","validation_subjects")
 dbutils.widgets.text("test_subjects","5-6","test_subjects")
+dbutils.widgets.text("classes","rest-squat-step","classes")
 
 # COMMAND ----------
 
@@ -45,33 +46,6 @@ DELTA_LAKE_PATH= "/tmp/delta/dataset"
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Bronze level raw data
-# MAGIC Create table for raw data
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC CREATE TABLE IF NOT EXISTS bronze_raw_data (path STRING, modificationTime TIMESTAMP, length LONG)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Data retrieval from the S3 mount point
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC COPY INTO bronze_raw_data
-# MAGIC FROM (
-# MAGIC   SELECT path, modificationTime, length
-# MAGIC   FROM 'dbfs:/mnt/s3-mounted-input/PPG_ACC_dataset/'
-# MAGIC )
-# MAGIC FILEFORMAT = BINARYFILE
-# MAGIC PATTERN = 'S[0-9]/*.mat'
-
-# COMMAND ----------
-
-# MAGIC %md
 # MAGIC ## Silver level cleaned data
 # MAGIC ### Get some parameters
 
@@ -79,11 +53,16 @@ DELTA_LAKE_PATH= "/tmp/delta/dataset"
 
 window = int(dbutils.widgets.get("window"))
 overlap = int(dbutils.widgets.get("overlap"))
-train_subject = tuple(map(int, dbutils.widgets.get("train_subjects")[0].split(" ")))
-validation_subject = tuple(map(int, dbutils.widgets.get("validation_subjects")[0].split(" ")))
-test_subject = tuple(map(int, dbutils.widgets.get("test_subjects")[0].split(" ")))
+train_subject = tuple(map(int, dbutils.widgets.get("train_subjects").split("-")))
+validation_subject = tuple(map(int, dbutils.widgets.get("validation_subjects").split("-")))
+test_subject = tuple(map(int, dbutils.widgets.get("test_subjects").split("-")))
+classes = dbutils.widgets.get("classes").split("-")
 
-x_data, y_data, subj_inputs = create_dataset("/dbfs/mnt/s3-mounted-input/PPG_ACC_dataset", window, overlap)
+dataset_dir = "/dbfs/mnt/s3-mounted-input/PPG_ACC_dataset"
+
+subject_index = list(range(0, len(os.listdir(dataset_dir))))
+
+x_data, y_data, subj_inputs = create_dataset(dataset_dir, subject_index, classes, window, overlap)
 clean_data(x_data)
 x_data_norm = normalize(x_data)
 x_data_norm, y_data, subj_inputs = oversampling(x_data_norm, y_data, subj_inputs, len(train_subject + validation_subject))
