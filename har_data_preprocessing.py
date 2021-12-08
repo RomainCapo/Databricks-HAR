@@ -9,8 +9,8 @@ dbutils.widgets.text("window","1200","window")
 dbutils.widgets.text("overlap","600","overlap")
 dbutils.widgets.text("train_subjects","0-1-2-3","train_subjects")
 dbutils.widgets.text("validation_subjects","4","validation_subjects")
-dbutils.widgets.text("test_subjects","5-6","test_subjects")
 dbutils.widgets.text("classes","rest-squat-step","classes")
+dbutils.widgets.text("test_subjects","5-6","test_subjects") 
 
 # COMMAND ----------
 
