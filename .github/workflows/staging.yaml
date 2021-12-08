@@ -1,6 +1,6 @@
 # build.yml
 on:
-  pull_request:
+  push:
     branches:        
     - staging            
 
