@@ -30,6 +30,6 @@ jobs:
           method: 'POST'
           bearerToken: ${{ secrets.DATABRICKS_TOKEN }}
           contentType: 'application/json'
-          data: '{"job_id":1481}'
+          data: '{"job_id":1667}'
       - name: Show run pipeline response
         run: echo ${{ steps.runPipeline.outputs.response }}
