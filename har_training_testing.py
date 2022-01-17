@@ -215,7 +215,7 @@ x_data_test, y_data_test = partition_data(hyperparameters["test_subjects"], subj
 # COMMAND ----------
 
 def promotes_new_model(stage, model_name):
-    """Archive all model wih the given stage and promotes the last one.
+    """Archive all model wih the given stage and promotes the last one. 
 
     Args:
         stage (string): Model stage
@@ -242,7 +242,7 @@ def promotes_new_model(stage, model_name):
 # COMMAND ----------
 
 model_name = "rnn-model"
-mlflow.set_experiment("/Repos/Production/Databricks-HAR/har_training_testing")
+mlflow.set_experiment("/Repos/"+environment+"/Databricks-HAR/har_training_testing")
 
 with mlflow.start_run(run_name='lstm_har') as run:
     mlflow.log_param("epochs", hyperparameters["epochs"])
